@@ -186,7 +186,7 @@ async function home(){
    return `<div class="meal">
      <div class="row">
        <div style="display:flex;gap:10px;align-items:center">
-         <div style="width:42px;height:42px;border-radius:13px;background:#f0f7f7;display:grid;place-items:center;font-size:22px">${meta[0]}</div>
+         <div style="width:48px;height:48px;border-radius:13px;background:#EAF0EA;display:grid;place-items:center;font-size:24px">${meta[0]}</div>
          <div><b>${meta[1]}</b><div class="sub">${settings.meal_times[m]}</div></div>
        </div>
        <div style="text-align:right"><div class="status ${st=="Present"?"present":"skipped"}">${st=="Present"?"PRESENT ✓":"SKIPPED ✕"}</div>${w.active&&st=="Present"?`<button class="btn small danger" style="margin-top:6px" onclick="skipMeal('${m}')">Skip</button>`:""}</div>
