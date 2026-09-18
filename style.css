@@ -172,7 +172,7 @@ p{margin:0 0 8px;line-height:1.55}
   cursor:pointer;
   transition:color .15s ease;
 }
-.nav b{font-size:20px;font-weight:400;line-height:1}
+.nav b{font-size:23px;font-weight:400;line-height:1}
 .nav.active{color:#fff}
 .nav.active:before{
   content:"";
@@ -239,11 +239,11 @@ p{margin:0 0 8px;line-height:1.55}
 .meal-card{margin-bottom:13px}
 .meal.product{display:flex;align-items:center;gap:12px}
 .pic{
-  width:44px;height:44px;
-  border-radius:13px;
+  width:50px;height:50px;
+  border-radius:14px;
   background:#EAF0EA;
   display:grid;place-items:center;
-  font-size:20px;
+  font-size:25px;
   flex:none;
 }
 .price{color:var(--muted);font-size:13px}
@@ -288,12 +288,12 @@ p{margin:0 0 8px;line-height:1.55}
 }
 .quick-tile:hover{transform:translateY(-2px)}
 .quick-tile span{
-  width:38px;height:38px;
+  width:46px;height:46px;
   display:grid;place-items:center;
-  border-radius:11px;
+  border-radius:12px;
   background:var(--pine);
   color:var(--amber);
-  font-size:18px;
+  font-size:24px;
 }
 .quick-tile b{font-size:13.5px}
 
@@ -404,12 +404,12 @@ textarea.input{min-height:95px;resize:vertical}
   cursor:pointer;
 }
 .sjm-icon{
-  width:44px;height:44px;
-  border-radius:13px;
+  width:50px;height:50px;
+  border-radius:14px;
   background:var(--pine);
   color:var(--amber);
   display:grid;place-items:center;
-  font-size:20px;
+  font-size:24px;
   flex:none;
 }
 .sjm-stat strong{
