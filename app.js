@@ -197,9 +197,9 @@ async function home(){
  shell(`
  <div class="card hero">
    <div class="hero-copy">
-     <div style="font-size:11px;letter-spacing:1.5px;font-weight:900;opacity:.78">SHRI JI • MEDICAL CAMPUS MESS</div>
+     <div class="eyebrow">${dayName()} mess pass</div>
      <h2>Hi, ${esc(me.name.split(" ")[0])} 👋</h2>
-     <div class="muted">Room ${esc(me.room)} · Batch ${esc(me.batch)}</div>
+     <div class="muted">Room ${esc(me.room)}, Batch ${esc(me.batch)}</div>
      <div class="hero-plan">✦ ${me.plan=="Monthly"?"Monthly ₹"+me.amount:"Daily ₹"+me.amount} <span>• Active</span></div>
    </div>
    <svg class="hero-art" viewBox="0 0 160 160" aria-hidden="true">
@@ -790,7 +790,7 @@ async function kitchen(){
  const orders=ordersR?.data||[];
  watchKitchenOrders(orders.map(o=>o.id));
  const audioReady=audioCtx&&audioCtx.state!=="suspended";
- document.getElementById("app").innerHTML=`<div class=top><div><div class=brand style="color:#ffb27d">🌸 Shri Ji Mess</div><div class=sub style="color:#aaa">Kitchen Panel</div></div><button class="btn small secondary" onclick="if(wakeLock){wakeLock.release();wakeLock=null}stopSiren();stopKitchenWatch();document.body.className='';staffHome()">Exit</button></div><div class=page>
+ document.getElementById("app").innerHTML=`<div class=top><div><div class=brand>🌸 Shri Ji Mess</div><div class=sub>Kitchen Panel</div></div><button class="btn small secondary" onclick="if(wakeLock){wakeLock.release();wakeLock=null}stopSiren();stopKitchenWatch();document.body.className='';staffHome()">Exit</button></div><div class=page>
  ${!audioReady?`<div class="card" style="background:#fff7e6;text-align:center"><b>🔔 Naye order ka siren alert sunne ke liye (jab tab khula ho)</b><br><button class="btn" style="margin-top:10px" onclick="unlockAudio()">🔊 Enable Sound Alerts</button></div>`:""}
  <div class="card" style="background:#eefdf3;text-align:center"><b>📱 Screen band/app minimize hone par bhi alert chahiye?</b><br><button class="btn green" style="margin-top:10px" onclick="enablePush()">🔔 Enable Push Notifications</button></div>
  ${p?`<div class=card><h3>🗳️ ${p.meal} Poll Result</h3>${p.winner?`<h1 style="margin:4px 0">${esc(p.winner.name)}</h1><div class=sub>${p.winner.votes} vote${p.winner.votes>1?"s":""} so far</div>`:`<p class=muted>No votes yet</p>`}</div>`:""}
@@ -811,51 +811,8 @@ async function loadKitchenPoll(){
 async function orderStatus(id,s){await safeCall(sb.from("orders").update({status:s}).eq("id",id),"Couldn't update order");kitchen()}
 
 
-/* ============================================================
-   SHRI JI MESS — PREMIUM UI / UNIFIED STAFF DASHBOARD
-   Added as an override layer so the existing data/workflows stay intact.
-   ============================================================ */
-(function injectPremiumUI(){
-  if(document.getElementById("sjmPremiumStyle")) return;
-  const st=document.createElement("style");
-  st.id="sjmPremiumStyle";
-  st.textContent=`
-  :root{
-    --sjm-navy:#08152f; --sjm-navy2:#10254a; --sjm-gold:#c9a45c;
-    --sjm-bg:#f5f7fb; --sjm-card:#ffffff; --sjm-text:#101828; --sjm-muted:#667085;
-    --sjm-green:#159947; --sjm-red:#d92d20; --sjm-radius:22px;
-  }
-  body{background:var(--sjm-bg)!important;color:var(--sjm-text);font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
-  .top{background:linear-gradient(135deg,var(--sjm-navy),var(--sjm-navy2))!important;color:#fff!important;border:0!important;
-       padding:18px 18px 16px!important;box-shadow:0 8px 30px rgba(8,21,47,.16)!important}
-  .brand{font-weight:850!important;letter-spacing:-.4px!important;color:#fff!important}
-  .sub{color:#8a94a6}
-  .page{max-width:760px;margin:auto;padding:18px 16px 100px!important}
-  .card{background:var(--sjm-card)!important;border:1px solid #e8edf5!important;border-radius:var(--sjm-radius)!important;
-        box-shadow:0 8px 28px rgba(16,24,40,.06)!important;padding:18px!important}
-  .btn{border-radius:14px!important;min-height:46px!important;font-weight:750!important;box-shadow:none!important}
-  .btn.small{min-height:38px!important;border-radius:12px!important}
-  .bottom{background:rgba(255,255,255,.96)!important;backdrop-filter:blur(14px);border-top:1px solid #e7ebf2!important}
-  .nav{font-size:11px!important;color:#667085!important}.nav b{font-size:20px!important}
-  .nav.active{color:var(--sjm-navy)!important}
-  .meal{border-radius:16px!important;border:1px solid #edf0f5!important;background:#fff!important}
-  .pill{border-radius:999px!important}
-  .sjm-hero{background:linear-gradient(135deg,#08152f,#173766);color:#fff;border-radius:28px;padding:22px;
-             box-shadow:0 16px 40px rgba(8,21,47,.18);margin-bottom:16px}
-  .sjm-hero h1{margin:0 0 5px;font-size:27px;letter-spacing:-.7px}.sjm-hero p{margin:0;color:#c8d2e4}
-  .sjm-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
-  .sjm-action{display:flex;align-items:center;gap:13px;text-align:left;padding:15px!important}
-  .sjm-icon{width:46px;height:46px;border-radius:15px;background:#eef2f8;display:grid;place-items:center;font-size:23px;flex:none}
-  .sjm-stat{padding:16px!important}.sjm-stat strong{font-size:27px;display:block;margin-top:5px}
-  .sjm-tabs{display:flex;gap:8px;overflow:auto;padding:10px 0 4px;position:sticky;top:0;z-index:4;background:var(--sjm-bg)}
-  .sjm-tab{white-space:nowrap;border:1px solid #e0e6ef;background:#fff;border-radius:999px;padding:10px 15px;font-weight:750}
-  .sjm-tab.on{background:var(--sjm-navy);color:#fff;border-color:var(--sjm-navy)}
-  .sjm-kitchen-card{background:linear-gradient(145deg,#fff,#f8fafc)!important}
-  .sjm-number{font-size:38px;font-weight:850;line-height:1}
-  @media(max-width:420px){.sjm-grid{grid-template-columns:1fr}.page{padding-left:12px!important;padding-right:12px!important}}
-  `;
-  document.head.appendChild(st);
-})();
+/* Staff dashboard styling now lives in style.css (single source of truth —
+   no more duplicate JS-injected stylesheet fighting the main one). */
 
 function sjmStaffHeader(active){
   const tabs=[["overview","📊 Overview"],["kitchen","🍽️ Kitchen"],["students","🩺 Students"],["cafe","☕ Café"],["payments","💳 Payments"],["poll","🗳️ Poll"],["settings","⚙️ Settings"]];
@@ -877,7 +834,7 @@ function staffHome(){
   document.getElementById("app").innerHTML=`<div class="page" style="padding-top:42px">
     <div class="sjm-hero"><div style="font-size:44px">🩺</div><h1>Shri Ji Mess</h1><p>Doctor Hostel • Staff Dashboard</p></div>
     <div class="card"><h2 style="margin-top:0">Welcome back 👋</h2><p class="muted">All operations are now in one place — kitchen, café, students, payments and menu.</p>
-    <button class="btn" style="width:100%;margin-top:10px;background:var(--sjm-navy);color:#fff" onclick="requireRole('staff',staffDashboard)">Open Staff Dashboard →</button></div>
+    <button class="btn" style="width:100%;margin-top:10px" onclick="requireRole('staff',staffDashboard)">Open Staff Dashboard</button></div>
   </div>`;
 }
 
@@ -911,8 +868,8 @@ async function staffDashboard(section="overview"){
   const focus=section==="kitchen"?"kitchen":section;
 
   let html=sjmStaffHeader(focus);
-  html+=`<div class="sjm-hero"><div style="font-size:13px;color:#c9a45c;font-weight:800;letter-spacing:.7px">STAFF CONTROL CENTER</div>
-    <h1>Everything in one place.</h1><p>Kitchen, Café, Students & payments — simple, fast, clear.</p></div>`;
+  html+=`<div class="sjm-hero"><div class="eyebrow">Staff dashboard</div>
+    <h1>Everything in one place.</h1><p>Kitchen, café, students and payments — simple, fast, clear.</p></div>`;
 
   html+=`<div class="sjm-grid">
     <div class="card sjm-stat"><span class="muted">🍽️ Meals to prepare</span><strong>${totalPrepare}</strong></div>
