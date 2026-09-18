@@ -71,6 +71,7 @@ async function boot(){
   loading("Shri Ji Mess loading...");
   const s=await safeCall(sb.from("settings").select("*").eq("id",1).single(),"Couldn't load settings");
   settings=s?.data||{whatsapp:"",daily_price:150,qr_url:"",admin_pin:"1234",kitchen_pin:"5678",meal_times:{Breakfast:"08:00",Lunch:"13:00",Snack:"17:00",Dinner:"20:00"}};
+  settings.today_menu=settings.today_menu||{Breakfast:"",Lunch:"",Snack:"",Dinner:""};
   const p=await safeCall(sb.from("products").select("*").order("id"),"Couldn't load menu");
   products=p?.data||[];
   if(window.IS_STAFF_APP){staffHome();return}
@@ -182,12 +183,12 @@ async function home(){
  const [records,leave,pollRow]=await Promise.all([myTodayMealRecords(),myActiveLeave(),loadTodayPoll()]);
  let mealMeta={Breakfast:["🍳","Breakfast"],Lunch:["🍛","Lunch"],Snack:["🥤","Snack"],Dinner:["🌙","Dinner"]};
  let mealsHtml=["Breakfast","Lunch","Snack","Dinner"].map(m=>{
-   let w=mealWindow(m), st=statusFrom(records,leave,m), meta=mealMeta[m];
+   let w=mealWindow(m), st=statusFrom(records,leave,m), meta=mealMeta[m], menuTxt=(settings.today_menu&&settings.today_menu[m])||"";
    return `<div class="meal">
      <div class="row">
        <div style="display:flex;gap:10px;align-items:center">
          <div style="width:48px;height:48px;border-radius:13px;background:#EAF0EA;display:grid;place-items:center;font-size:24px">${meta[0]}</div>
-         <div><b>${meta[1]}</b><div class="sub">${settings.meal_times[m]}</div></div>
+         <div><b>${meta[1]}</b><div class="sub">${settings.meal_times[m]}</div>${menuTxt?`<div class="sub" style="color:var(--ink);font-weight:700;margin-top:2px">🍽️ ${esc(menuTxt)}</div>`:""}</div>
        </div>
        <div style="text-align:right"><div class="status ${st=="Present"?"present":"skipped"}">${st=="Present"?"PRESENT ✓":"SKIPPED ✕"}</div>${w.active&&st=="Present"?`<button class="btn small danger" style="margin-top:6px" onclick="skipMeal('${m}')">Skip</button>`:""}</div>
      </div>
@@ -252,9 +253,11 @@ async function meals(){
    const rec=records.find(x=>x.meal===m);
    const choice=rec?.serving||"Dine-in";
    const sick=!!rec?.sick_light_diet;
+   const menuTxt=(settings.today_menu&&settings.today_menu[m])||"";
    return `<div class="card meal-card">
     <div class="row"><h3>${m}</h3><span class="pill">${st==="Skipped"?"SKIPPED ❌":"PRESENT ✅"}</span></div>
     <div class="sub">${settings.meal_times[m]} • Skip window: 1 hour before meal</div>
+    ${menuTxt?`<div class="sub" style="color:var(--ink);font-weight:700;margin-top:4px">🍽️ Today: ${esc(menuTxt)}</div>`:""}
     <div style="margin-top:10px"><b>How will you take your meal?</b>
       <div style="display:flex;gap:8px;margin-top:8px">
         <button class="btn small ${choice==="Dine-in"?"primary":"secondary"}" onclick="setMealServing('${m}','Dine-in')">🍽️ Dine-in</button>
@@ -779,6 +782,16 @@ async function keepScreenAwake(){
 document.addEventListener("visibilitychange",async()=>{
  if(document.visibilityState==="visible"&&document.body.className==="kitchen")await keepScreenAwake();
 });
+async function saveTodayMenu(){
+ const mealsArr=["Breakfast","Lunch","Snack","Dinner"];
+ const menu={};
+ mealsArr.forEach(m=>{menu[m]=(document.getElementById("menu_"+m)?.value||"").trim()});
+ const r=await safeCall(sb.from("settings").update({today_menu:menu}).eq("id",1),"Couldn't save today's menu");
+ if(!r)return;
+ settings.today_menu=menu;
+ toast("🍽️ Aaj ka menu update ho gaya");
+ kitchen();
+}
 async function kitchen(){
  loading("Loading kitchen panel...");
  document.body.className="kitchen";
@@ -793,6 +806,9 @@ async function kitchen(){
  document.getElementById("app").innerHTML=`<div class=top><div><div class=brand>🌸 Shri Ji Mess</div><div class=sub>Kitchen Panel</div></div><button class="btn small secondary" onclick="if(wakeLock){wakeLock.release();wakeLock=null}stopSiren();stopKitchenWatch();document.body.className='';staffHome()">Exit</button></div><div class=page>
  ${!audioReady?`<div class="card" style="background:#fff7e6;text-align:center"><b>🔔 Naye order ka siren alert sunne ke liye (jab tab khula ho)</b><br><button class="btn" style="margin-top:10px" onclick="unlockAudio()">🔊 Enable Sound Alerts</button></div>`:""}
  <div class="card" style="background:#eefdf3;text-align:center"><b>📱 Screen band/app minimize hone par bhi alert chahiye?</b><br><button class="btn green" style="margin-top:10px" onclick="enablePush()">🔔 Enable Push Notifications</button></div>
+ <div class="card"><h3 style="margin-top:0">🍽️ Aaj Ka Menu</h3><p class="muted" style="margin-top:-4px">Bacchon ko home page par dikhega. Roz update karo.</p>
+ ${mealsArr.map(m=>`<label class="label">${m}</label><input class="input" id="menu_${m}" placeholder="jaise: Poha, Chai, Kela" value="${esc(settings.today_menu&&settings.today_menu[m]||"")}">`).join("")}
+ <button class="btn" style="margin-top:10px" onclick="saveTodayMenu()">Save Aaj Ka Menu</button></div>
  ${p?`<div class=card><h3>🗳️ ${p.meal} Poll Result</h3>${p.winner?`<h1 style="margin:4px 0">${esc(p.winner.name)}</h1><div class=sub>${p.winner.votes} vote${p.winner.votes>1?"s":""} so far</div>`:`<p class=muted>No votes yet</p>`}</div>`:""}
  <h2>🍽️ Today's Preparation</h2>${mealsArr.map((m,i)=>{let c=counts[i];return `<div class=card><div class=row><div><div style="font-size:28px">${m=="Breakfast"?"🍳":m=="Lunch"?"🍛":m=="Snack"?"☕":"🌙"}</div><b>${m}</b></div><h1>${c.prepare}</h1></div><div class=sub>MEALS TO PREPARE</div></div>`}).join("")}
  <h2>☕ Café Orders</h2>${orders.map(o=>`<div class=card><div class=row><b>#${o.id}</b><span class=pill>${o.status}</span></div><p>${o.items.map(x=>esc(x[0])+" × "+x[1]).join("<br>")}</p><b>Room ${esc(o.room)}</b>${o.student_phone?`<div style="margin-top:4px"><a class="btn small secondary" href="tel:${esc(o.student_phone)}">📞 Call ${esc(o.student_phone)}</a></div>`:""}<div style="display:flex;gap:7px;margin-top:10px"><button class="btn small" onclick="orderStatus('${o.id}','Preparing')">PREPARING</button><button class="btn small green" onclick="orderStatus('${o.id}','Ready for Pickup')">READY</button><button class="btn small secondary" onclick="orderStatus('${o.id}','Completed')">COMPLETED</button></div></div>`).join("")}</div>`
