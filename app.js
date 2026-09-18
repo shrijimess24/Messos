@@ -85,14 +85,12 @@ async function boot(){
   register();
 }
 function staffHome(){
- document.getElementById("app").innerHTML=`<div class="page" style="text-align:center;padding-top:70px">
-  <div style="font-size:56px">🌸</div>
-  <h2>Shri Ji Mess — Staff App</h2>
-  <p class="muted">Choose which panel to open</p>
-  <button class="btn" style="max-width:260px;margin:16px auto 8px" onclick="requireRole('admin',admin)">🔐 Admin Panel</button>
-  <button class="btn secondary" style="max-width:260px;margin:8px auto" onclick="requireRole('kitchen',kitchen)">👩‍🍳 Kitchen Panel</button>
+ document.getElementById("app").innerHTML=`<div class="page" style="text-align:center;padding-top:55px">
+  <div style="font-size:52px">🩺</div><h2>Shri Ji Mess</h2><p class="muted">Staff Dashboard</p>
+  <button class="btn" style="max-width:280px;margin:18px auto" onclick="requireRole('staff',staffDashboard)">🔐 Open Staff Dashboard</button>
  </div>`;
 }
+function staffDashboard(){ admin(); }
 function register(){modal(`<h2>🌸 Welcome to Shri Ji Mess</h2><p class=muted>Registration is simple — only 4 details. Already registered? Enter the same phone number to log back in.</p><label class=label>Name</label><input class=input id=rn placeholder="Your name"><label class=label>Phone Number</label><input class=input id=rph type=tel placeholder="10-digit mobile number" maxlength=10><label class=label>Batch</label><input class=input id=rb placeholder="2026"><label class=label>Room No.</label><input class=input id=rr placeholder="A-104"><button class=btn onclick="registerSave()">Continue</button>`,false)}
 async function registerSave(){
   let n=document.getElementById("rn").value.trim(),ph=document.getElementById("rph").value.replace(/\D/g,""),b=document.getElementById("rb").value.trim(),r=document.getElementById("rr").value.trim();
@@ -123,11 +121,11 @@ async function choosePlan(p){
 }
 
 function requireRole(role,cb){
- const sessionKey=role==="admin"?"sjmAdminOk":"sjmKitchenOk";
+ const sessionKey="sjmStaffOk";
  if(sessionStorage.getItem(sessionKey)==="1"){cb();return}
- const pin=prompt(role==="admin"?"Enter Admin PIN":"Enter Kitchen PIN");
+ const pin=prompt("Enter Staff PIN");
  if(pin===null){lockedScreen(role,cb);return}
- const expected=String(role==="admin"?settings.admin_pin:settings.kitchen_pin);
+ const expected=String(settings.admin_pin||"1234");
  if(pin===expected){sessionStorage.setItem(sessionKey,"1");cb()}
  else{toast("❌ Galat PIN");lockedScreen(role,cb)}
 }
@@ -151,7 +149,7 @@ function nav(active){
 }
 function shell(content,active){
  ensureReminders();
- document.getElementById("app").innerHTML=`<div class="top"><div><div class="brand">🌸 Shri Ji Mess</div><div class="sub">Girls' Mess & Café</div></div><span class="pill">${esc(me.room||"")}</span></div><div class="page">${content}</div>${nav(active)}`}
+ document.getElementById("app").innerHTML=`<div class="top"><div><div class="brand">🌸 Shri Ji Mess</div><div class="sub">Doctor Hostel Mess & Café</div></div><span class="pill">${esc(me.room||"")}</span></div><div class="page">${content}</div>${nav(active)}`}
 function show(page){
  if(page=="home") home(); if(page=="meals") meals();if(page=="poll") poll();if(page=="cafe") cafe();if(page=="profile") profile();
 }
@@ -562,7 +560,7 @@ async function admin(){
  document.getElementById("app").innerHTML=`<div class="top"><div><div class=brand>🌸 Shri Ji Mess</div><div class=sub>Admin Panel</div></div><button class="btn small secondary" onclick="staffHome()">Switch Panel</button></div>
  <div class=adminTop><button class="tab on" onclick="admin()">Dashboard</button><button class=tab onclick="studentsAdmin()">Students</button><button class=tab onclick="productsAdmin()">Café</button><button class=tab onclick="settingsAdmin()">Settings</button></div><div class=page>
  <div class=card><h2>Today's Meals</h2>${mealsArr.map((m,i)=>{let c=counts[i],sc=sicks[i];return `<div class=meal><div class=row><b>${m}</b><b>Prepare: ${c.prepare}${sc?` <span class=sub>(🤒 ${sc})</span>`:""}</b></div><div class=sub>Total ${c.total} • Present ${c.present} • Skipped ${c.skipped}</div></div>`}).join("")}</div>
- <div class=grid><div class=card><b>👩 Active Girls</b><h2>${activeGirls?.count||0}</h2></div><div class=card><b>💳 Pending Payments</b><h2>${pendingPay?.count||0}</h2></div><div class=card><b>🛒 New Orders</b><h2>${newOrders?.count||0}</h2></div><div class=card><b>📝 Complaints</b><h2>${pendingComplaints}</h2></div></div>
+ <div class=grid><div class=card><b>🩺 Active Students</b><h2>${activeGirls?.count||0}</h2></div><div class=card><b>💳 Pending Payments</b><h2>${pendingPay?.count||0}</h2></div><div class=card><b>🛒 New Orders</b><h2>${newOrders?.count||0}</h2></div><div class=card><b>📝 Complaints</b><h2>${pendingComplaints}</h2></div></div>
  <div class=card><h3>☕ Café Orders</h3>${orders.map(o=>`<div class=meal><div class=row><b>#${o.id}</b><span class=pill>${o.status}</span></div><div class=sub>${esc(o.student_name)} • Room ${esc(o.room)}${o.student_phone?` • <a href="tel:${esc(o.student_phone)}">📞 ${esc(o.student_phone)}</a>`:""} • ₹${o.total}</div><div class=row style="margin-top:6px"><span class=sub>Payment: ${esc(o.payment||"Pending")}</span>${o.payment!=="Received"?`<button class="btn small" onclick="markOrderPaid('${o.id}')">Mark Payment Received</button>`:""}</div></div>`).join("")||"<p class=muted>No orders yet.</p>"}</div>
  <div class=card><h3>Recent Feedback</h3>${feedback.map(f=>`<p>⭐ ${f.rating}/5 — ${esc(f.taste||"No taste comment")} <span class=sub>(${esc(f.student_name||"")})</span></p>`).join("")||"<p class=muted>No feedback yet.</p>"}</div>
  <div class=card><h3>📢 Notices</h3><input class=input id=notice placeholder="New announcement"><button class=btn onclick="addNotice()">Post Notice</button></div>
@@ -812,5 +810,147 @@ async function loadKitchenPoll(){
 }
 async function orderStatus(id,s){await safeCall(sb.from("orders").update({status:s}).eq("id",id),"Couldn't update order");kitchen()}
 
-boot();
 
+/* ============================================================
+   SHRI JI MESS — PREMIUM UI / UNIFIED STAFF DASHBOARD
+   Added as an override layer so the existing data/workflows stay intact.
+   ============================================================ */
+(function injectPremiumUI(){
+  if(document.getElementById("sjmPremiumStyle")) return;
+  const st=document.createElement("style");
+  st.id="sjmPremiumStyle";
+  st.textContent=`
+  :root{
+    --sjm-navy:#08152f; --sjm-navy2:#10254a; --sjm-gold:#c9a45c;
+    --sjm-bg:#f5f7fb; --sjm-card:#ffffff; --sjm-text:#101828; --sjm-muted:#667085;
+    --sjm-green:#159947; --sjm-red:#d92d20; --sjm-radius:22px;
+  }
+  body{background:var(--sjm-bg)!important;color:var(--sjm-text);font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+  .top{background:linear-gradient(135deg,var(--sjm-navy),var(--sjm-navy2))!important;color:#fff!important;border:0!important;
+       padding:18px 18px 16px!important;box-shadow:0 8px 30px rgba(8,21,47,.16)!important}
+  .brand{font-weight:850!important;letter-spacing:-.4px!important;color:#fff!important}
+  .sub{color:#8a94a6}
+  .page{max-width:760px;margin:auto;padding:18px 16px 100px!important}
+  .card{background:var(--sjm-card)!important;border:1px solid #e8edf5!important;border-radius:var(--sjm-radius)!important;
+        box-shadow:0 8px 28px rgba(16,24,40,.06)!important;padding:18px!important}
+  .btn{border-radius:14px!important;min-height:46px!important;font-weight:750!important;box-shadow:none!important}
+  .btn.small{min-height:38px!important;border-radius:12px!important}
+  .bottom{background:rgba(255,255,255,.96)!important;backdrop-filter:blur(14px);border-top:1px solid #e7ebf2!important}
+  .nav{font-size:11px!important;color:#667085!important}.nav b{font-size:20px!important}
+  .nav.active{color:var(--sjm-navy)!important}
+  .meal{border-radius:16px!important;border:1px solid #edf0f5!important;background:#fff!important}
+  .pill{border-radius:999px!important}
+  .sjm-hero{background:linear-gradient(135deg,#08152f,#173766);color:#fff;border-radius:28px;padding:22px;
+             box-shadow:0 16px 40px rgba(8,21,47,.18);margin-bottom:16px}
+  .sjm-hero h1{margin:0 0 5px;font-size:27px;letter-spacing:-.7px}.sjm-hero p{margin:0;color:#c8d2e4}
+  .sjm-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+  .sjm-action{display:flex;align-items:center;gap:13px;text-align:left;padding:15px!important}
+  .sjm-icon{width:46px;height:46px;border-radius:15px;background:#eef2f8;display:grid;place-items:center;font-size:23px;flex:none}
+  .sjm-stat{padding:16px!important}.sjm-stat strong{font-size:27px;display:block;margin-top:5px}
+  .sjm-tabs{display:flex;gap:8px;overflow:auto;padding:10px 0 4px;position:sticky;top:0;z-index:4;background:var(--sjm-bg)}
+  .sjm-tab{white-space:nowrap;border:1px solid #e0e6ef;background:#fff;border-radius:999px;padding:10px 15px;font-weight:750}
+  .sjm-tab.on{background:var(--sjm-navy);color:#fff;border-color:var(--sjm-navy)}
+  .sjm-kitchen-card{background:linear-gradient(145deg,#fff,#f8fafc)!important}
+  .sjm-number{font-size:38px;font-weight:850;line-height:1}
+  @media(max-width:420px){.sjm-grid{grid-template-columns:1fr}.page{padding-left:12px!important;padding-right:12px!important}}
+  `;
+  document.head.appendChild(st);
+})();
+
+function sjmStaffHeader(active){
+  const tabs=[["overview","📊 Overview"],["kitchen","🍽️ Kitchen"],["students","🩺 Students"],["cafe","☕ Café"],["payments","💳 Payments"],["poll","🗳️ Poll"],["settings","⚙️ Settings"]];
+  return `<div class="top"><div><div class="brand">🩺 Shri Ji Mess</div><div class="sub">Doctor Hostel • Staff Dashboard</div></div><span class="pill">STAFF</span></div>
+  <div class="page"><div class="sjm-tabs">${tabs.map(t=>`<button class="sjm-tab ${active===t[0]?"on":""}" onclick="sjmStaffGo('${t[0]}')">${t[1]}</button>`).join("")}</div>`;
+}
+
+function sjmStaffGo(tab){
+  if(tab==="students"){studentsAdmin();return}
+  if(tab==="cafe"){productsAdmin();return}
+  if(tab==="settings"){settingsAdmin();return}
+  if(tab==="kitchen"){kitchen();return}
+  if(tab==="payments"){staffDashboard("payments");return}
+  if(tab==="poll"){staffDashboard("poll");return}
+  staffDashboard("overview");
+}
+
+function staffHome(){
+  document.getElementById("app").innerHTML=`<div class="page" style="padding-top:42px">
+    <div class="sjm-hero"><div style="font-size:44px">🩺</div><h1>Shri Ji Mess</h1><p>Doctor Hostel • Staff Dashboard</p></div>
+    <div class="card"><h2 style="margin-top:0">Welcome back 👋</h2><p class="muted">All operations are now in one place — kitchen, café, students, payments and menu.</p>
+    <button class="btn" style="width:100%;margin-top:10px;background:var(--sjm-navy);color:#fff" onclick="requireRole('staff',staffDashboard)">Open Staff Dashboard →</button></div>
+  </div>`;
+}
+
+function requireRole(role,cb){
+  const key="sjmStaffOk";
+  if(sessionStorage.getItem(key)==="1"){cb("overview");return}
+  const expected=String(settings.staff_pin||settings.admin_pin||settings.kitchen_pin||"1234");
+  const pin=prompt("Enter Staff PIN");
+  if(pin===null){staffHome();return}
+  if(String(pin)===expected){sessionStorage.setItem(key,"1");cb("overview")}
+  else{toast("❌ Galat Staff PIN");staffHome()}
+}
+
+async function staffDashboard(section="overview"){
+  loading("Loading Staff Dashboard...");
+  document.body.className="";
+  const mealsArr=["Breakfast","Lunch","Snack","Dinner"];
+  const [counts,sicks,activeStudents,pendingPay,newOrders,complaintsR,feedbackR,ordersR]=await Promise.all([
+    Promise.all(mealsArr.map(m=>mealCounts(m))),
+    Promise.all(mealsArr.map(m=>sickCount(m))),
+    safeCall(sb.from("students").select("*",{count:"exact",head:true}).eq("active",true),""),
+    safeCall(sb.from("students").select("*",{count:"exact",head:true}).neq("payment","Received"),""),
+    safeCall(sb.from("orders").select("*",{count:"exact",head:true}).eq("status","New"),""),
+    safeCall(sb.from("complaints").select("*").order("created_at",{ascending:false}),"Couldn't load complaints"),
+    safeCall(sb.from("feedback").select("*").order("created_at",{ascending:false}).limit(4),""),
+    safeCall(sb.from("orders").select("*").order("created_at",{ascending:false}).limit(25),"Couldn't load orders")
+  ]);
+  const complaints=complaintsR?.data||[], feedback=feedbackR?.data||[], orders=ordersR?.data||[];
+  const pendingComplaints=complaints.filter(c=>c.status!=="Solved").length;
+  const totalPrepare=counts.reduce((a,c)=>a+(c.prepare||0),0);
+  const focus=section==="kitchen"?"kitchen":section;
+
+  let html=sjmStaffHeader(focus);
+  html+=`<div class="sjm-hero"><div style="font-size:13px;color:#c9a45c;font-weight:800;letter-spacing:.7px">STAFF CONTROL CENTER</div>
+    <h1>Everything in one place.</h1><p>Kitchen, Café, Students & payments — simple, fast, clear.</p></div>`;
+
+  html+=`<div class="sjm-grid">
+    <div class="card sjm-stat"><span class="muted">🍽️ Meals to prepare</span><strong>${totalPrepare}</strong></div>
+    <div class="card sjm-stat"><span class="muted">🩺 Active students</span><strong>${activeStudents?.count||0}</strong></div>
+    <div class="card sjm-stat"><span class="muted">🛒 New café orders</span><strong>${newOrders?.count||0}</strong></div>
+    <div class="card sjm-stat"><span class="muted">💳 Pending payments</span><strong>${pendingPay?.count||0}</strong></div>
+  </div>`;
+
+  html+=`<div class="sjm-grid" style="margin-top:12px">
+    <button class="card sjm-action" onclick="staffDashboard('kitchen')"><span class="sjm-icon">🍽️</span><span><b>Kitchen</b><br><span class="muted">Preparation + live orders</span></span></button>
+    <button class="card sjm-action" onclick="studentsAdmin()"><span class="sjm-icon">🩺</span><span><b>Students</b><br><span class="muted">Manage residents</span></span></button>
+    <button class="card sjm-action" onclick="productsAdmin()"><span class="sjm-icon">☕</span><span><b>Café</b><br><span class="muted">Menu + products</span></span></button>
+    <button class="card sjm-action" onclick="staffDashboard('payments')"><span class="sjm-icon">💳</span><span><b>Payments</b><br><span class="muted">Pending verification</span></span></button>
+  </div>`;
+
+  if(focus==="kitchen"){
+    html+=`<div class="card" style="margin-top:14px"><h2 style="margin-top:0">Today's Kitchen</h2>`;
+    html+=mealsArr.map((m,i)=>{const c=counts[i],sc=sicks[i];return `<div class="meal sjm-kitchen-card"><div class="row"><div><b>${m}</b><div class="sub">Total ${c.total} • Present ${c.present} • Skipped ${c.skipped}</div></div><div class="sjm-number">${c.prepare}</div></div>${sc?`<div class="sub">🤒 ${sc} light-diet request${sc>1?"s":""}</div>`:""}</div>`}).join("");
+    html+=`</div><div class="card"><h2 style="margin-top:0">☕ Live Café Orders</h2>`;
+    html+=orders.map(o=>`<div class="meal"><div class="row"><b>#${o.id}</b><span class="pill">${esc(o.status)}</span></div><div class="sub">${esc(o.student_name)} • Room ${esc(o.room)} • ₹${o.total}</div><p>${(o.items||[]).map(x=>esc(x[0])+" × "+x[1]).join("<br>")}</p><div style="display:flex;gap:7px;flex-wrap:wrap"><button class="btn small" onclick="orderStatus('${o.id}','Preparing')">PREPARING</button><button class="btn small green" onclick="orderStatus('${o.id}','Ready for Pickup')">READY</button><button class="btn small secondary" onclick="orderStatus('${o.id}','Completed')">COMPLETED</button></div></div>`).join("")||`<p class="muted">No café orders.</p>`;
+    html+=`</div>`;
+  } else if(focus==="payments"){
+    html+=`<div class="card" style="margin-top:14px"><h2 style="margin-top:0">💳 Payment Queue</h2><p class="muted">${pendingPay?.count||0} students need payment verification.</p><button class="btn" onclick="studentsAdmin()">Open Students →</button></div>`;
+  } else if(focus==="poll"){
+    const p=await loadKitchenPoll();
+    html+=`<div class="card" style="margin-top:14px"><h2 style="margin-top:0">🗳️ Today's Poll</h2>${p?.winner?`<div class="sjm-hero" style="margin:10px 0"><div class="muted" style="color:#c8d2e4">Current winner</div><h1>${esc(p.winner.name)}</h1><p>${p.winner.votes} vote${p.winner.votes>1?"s":""} so far</p></div>`:`<p class="muted">No votes yet.</p>`}</div>`;
+  } else {
+    html+=`<div class="card" style="margin-top:14px"><h2 style="margin-top:0">Today's Meals</h2>${mealsArr.map((m,i)=>{const c=counts[i],sc=sicks[i];return `<div class="meal"><div class="row"><b>${m}</b><b>${c.prepare} to prepare</b></div><div class="sub">Present ${c.present} • Skipped ${c.skipped}${sc?` • 🤒 Light ${sc}`:""}</div></div>`}).join("")}</div>`;
+    html+=`<div class="card"><h2 style="margin-top:0">☕ Recent Café Orders</h2>${orders.slice(0,8).map(o=>`<div class="meal"><div class="row"><b>#${o.id}</b><span class="pill">${esc(o.status)}</span></div><div class="sub">${esc(o.student_name)} • Room ${esc(o.room)} • ₹${o.total}</div></div>`).join("")||`<p class="muted">No orders yet.</p>`}</div>`;
+    html+=`<div class="card"><h3>📝 Open Complaints</h3><b>${pendingComplaints}</b><p class="muted">Use Students/management section to resolve them.</p></div>`;
+  }
+  html+=`</div>`;
+  document.getElementById("app").innerHTML=html;
+}
+
+async function admin(){ return staffDashboard("overview"); }
+// NOTE: kitchen() intentionally NOT redefined here — the original kitchen()
+// defined above (with siren alerts, order banner, wake-lock and live order
+// watch) is kept as the real kitchen panel.
+
+boot();
