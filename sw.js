@@ -2,7 +2,7 @@
    Handles: (1) push notifications for enablePush() in app.js
             (2) basic offline caching of the app shell
 */
-const CACHE_NAME = "sjm-cache-v1";
+const CACHE_NAME = "sjm-cache-v2";
 const APP_SHELL = ["./", "./index.html", "./app.js", "./style.css", "./manifest.json"];
 
 self.addEventListener("install", (event) => {
@@ -23,6 +23,25 @@ self.addEventListener("activate", (event) => {
 
 self.addEventListener("fetch", (event) => {
   if (event.request.method !== "GET") return;
+  const url = new URL(event.request.url);
+  const isAppShell = APP_SHELL.some((p) => url.pathname.endsWith(p.replace("./", "")) || url.pathname === "/" );
+  if (isAppShell || event.request.mode === "navigate") {
+    // Network-first: always try to get the latest file first so a fresh
+    // deploy shows up right away. Only fall back to cache when offline.
+    event.respondWith(
+      fetch(event.request)
+        .then((resp) => {
+          if (resp && resp.status === 200) {
+            const copy = resp.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy));
+          }
+          return resp;
+        })
+        .catch(() => caches.match(event.request))
+    );
+    return;
+  }
+  // Everything else (icons etc.): cache-first is fine, they rarely change.
   event.respondWith(
     caches.match(event.request).then((cached) => {
       const network = fetch(event.request)
